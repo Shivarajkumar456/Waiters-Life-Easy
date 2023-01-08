@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <form onsubmit="saveToLocalStorage(event)">
+        <label>Choose Price: </label>
+        <input id="price" type="number" name="price" required>
+        <label>Choose Dish: </label>
+        <input id="dish" type="text" name="dish" required>
+        <label>Choose a Table</label>
+        <select id="table" name="table">
+            <option value="Table1">Table1</option>
+            <option value="Table2">Table2</option>
+            <option value="Table3">Table3</option>
+        </select>
+        <button>Add to Bill</button>
+    </form>
+    <h1>Orders</h1>
+    <section>
+        <h2>Table1</h2>
+        <ul id="tableOne"></ul>
+    </section>
+    <section>
+        <h2>Table2</h2>
+        <ul id="tableTwo"></ul>
+    </section>
+    <section>
+        <h2>Table3</h2>
+        <ul id="tableThree"></ul>
+    </section>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.2.2/axios.min.js"></script>
+    <script>
+        function saveToLocalStorage(event){
+            event.preventDefault();
+            const price = event.target.price.value;
+            const dish = event.target.dish.value;
+            const table = event.target.table.value;
+            const obj = {
+                price,
+                dish,
+                table
+            }
+           axios.post('https://crudcrud.com/api/ba36d6edd9d240978b85ae3345c64945/tableList',obj)
+           .then((res) => {
+            showContent(res.data);
+           }).catch(err => console.log(err));
+            event.target.price.value = "";
+            event.target.dish.value = "";
+        }
+
+        window.addEventListener("DOMContentLoaded", () => {
+            axios.get("https://crudcrud.com/api/ba36d6edd9d240978b85ae3345c64945/tableList")
+                .then((res) => {
+                    for (var i = 0; i < res.data.length; i++) {
+                        showContent(res.data[i]);
+                    }
+                }).catch(err => console.log(err));
+        });
+
+
+        function showContent(obj){
+            let tableElement;
+        if (obj.table === "Table1") {
+            tableElement = document.getElementById("tableOne");
+        } else if (obj.table === "Table2") {
+            tableElement = document.getElementById("tableTwo");
+        } else if (obj.table === "Table3") {
+            tableElement = document.getElementById("tableThree");
+        }
+
+        const childHTML = `<li id=${obj._id}>${obj.price} - ${obj.table} - ${obj.dish}
+                    - <button onclick = deleteTable('${obj._id}')>Delete Order</button>
+                    </li>`        
+        tableElement.innerHTML = tableElement.innerHTML + childHTML;
+        }
+        function deleteTable(objId){
+            axios.get(`https://crudcrud.com/api/ba36d6edd9d240978b85ae3345c64945/tableList/${objId}`)
+            .then(res => removeOrder(res.data));
+            axios.delete(`https://crudcrud.com/api/ba36d6edd9d240978b85ae3345c64945/tableList/${objId}`)
+                .then(res => console.log(res))
+                .catch(err => console.log(err));
+            
+        }
+
+        function removeOrder(order){
+            let tableElement;
+        if (order.table === "Table1") {
+            tableElement = document.getElementById("tableOne");
+        } else if (order.table === "Table2") {
+            tableElement = document.getElementById("tableTwo");
+        } else if (order.table === "Table3") {
+            tableElement = document.getElementById("tableThree");
+        }
+        const tabletoBeDeleted = document.getElementById(order._id);
+            if (tabletoBeDeleted) {
+                tableElement.removeChild(tabletoBeDeleted);
+            }
+        }
+        
+       
+
+    </script>
+</body>
+</html>
